@@ -380,16 +380,14 @@
         
         async function callGoogleScript(payload) {
             if (GOOGLE_SCRIPT_URL === 'PASTE_YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE') {
-                showMessage('Lỗi cấu hình: Vui lòng dán URL Google Apps Script vào code (dòng 345).');
+                showMessage('Lỗi cấu hình: Vui lòng dán URL Google Apps Script vào code (dòng 313).');
                 return null;
             }
             
             setLoading(true);
             try {
                 // Thêm username vào payload nếu đã đăng nhập
-                if (currentAdminUser) {
-                    payload.adminUser = currentAdminUser;
-                }
+                // ĐÃ XÓA: Không cần gửi adminUser trong phiên bản này
                 
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
@@ -460,8 +458,7 @@
             html += createInfoRow('SĐT Khách hàng', data.sdtKhach);
             html += createInfoRow('Ngày xuất kho', formatDate(data.xuatKho));
             html += createInfoRow('Ngày kích hoạt', formatDate(data.kichHoat));
-            // HIỂN THỊ LẠI THEO YÊU CẦU MỚI:
-            html += createInfoRow('Người kích hoạt', data.nguoiKichHoat); 
+            // ĐÃ XÓA: Người kích hoạt
 
             html += `
                 <div class="mt-4 pt-4 border-t border-dashed border-gray-300">
@@ -484,7 +481,7 @@
             showView('result-view');
         }
 
-        // ĐÃ XÓA: Hàm displayHistory (nguyên nhân lỗi async)
+        // ĐÃ XÓA: Hàm displayHistory
 
         // --- XỬ LÝ CAMERA ---
         async function handleScan(inputId) {
@@ -623,7 +620,6 @@
                         action: 'activate',
                         serial: adminForm.serial.value.trim().toUpperCase(),
                         phone: adminForm.phone.value.trim()
-                        // username đã tự động thêm vào callGoogleScript
                     });
                     if (data) {
                         displayActivatedResult(data, "KÍCH HOẠT THÀNH CÔNG");
