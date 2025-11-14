@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tra Cứu Bảo Hành Premium</title>
+    <!-- Tải Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter chuẩn đẹp -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tải thư viện quét mã vạch -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <script>
+        // Cấu hình Tailwind
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb', // Royal Blue
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    } 
+                } 
+            } 
+        } 
+    </script> 
+
+    <style type="text/tailwindcss">
+        /* CSS Tùy Chỉnh */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa; /* Màu nền xám khói rất nhẹ */
+        }
+        
+        .category-link {
+            @apply text-center text-sm font-semibold text-primary-800 bg-primary-50 p-3 rounded-xl transition-all duration-200;
+            @apply hover:bg-primary-100 hover:shadow-md;
+        }
+
+        .btn-primary {
+            @apply bg-primary-600 hover:bg-primary-700 transition duration-200 text-white;
+        }
+        
+        /* Spinner */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #2563eb; /* Dùng màu Royal Blue */
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Thẻ kết quả */
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 10px 0;
+            border-bottom: 1px dashed #e5e7eb;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #6b7280; /* text-gray-500 */
+            text-transform: uppercase;
+        }
+        .info-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937; /* text-gray-800 */
+        }
+
+        .view {
+            display: none;
+        }
+        .view.active {
+            display: block;
+        }
+    </style>
+</head>
+<!-- YÊU CẦU MỚI: Bỏ padding p-4 và items-center trên mobile, thêm lại trên md: -->
+<body class="min-h-screen flex items-start md:items-center justify-center p-0 md:p-4 text-gray-800">
+
+    <!-- YÊU CẦU MỚI: Bỏ bo góc rounded-3xl và shadow-2xl trên mobile, thêm lại trên md: -->
+    <div class="w-full max-w-md bg-white rounded-none md:rounded-3xl shadow-none md:shadow-2xl overflow-hidden">
+        
+        <!-- YÊU CẦU MỚI: Vị trí Banner -->
+        <div class="w-full bg-gray-200" style="aspect-ratio: 4 / 1;">
+            <img id="banner-img" src="banner.png" 
+                 alt="Banner" 
+                 class="w-full h-full object-cover"
+                 onerror="this.onerror=null; this.src='banner.jpg'; this.onerror=null; this.src='https://placehold.co/600x150/e0e7ff/3730a3?text=VSP+Tech&font=inter';">
+        </div>
+
+        <!-- Header Background -->
+        <div class="bg-white pt-6 pb-2 px-6 md:px-8">
+            <!-- Phần Danh Mục (Đẹp & Cân đối) -->
+            <div class="grid grid-cols-3 gap-3 mb-6">
+                <!-- Hàng 1 -->
+                <a href="https://vsp.vn/tivi.html" class="category-link">Tivi</a>
+                <a href="https://vsp.vn/man-hinh.html" class="category-link">Màn Hình</a>
+                <a href="https://vsp.vn/vsp-html.html" class="category-link">PC Để Bàn</a>
+                <!-- Hàng 2 -->
+                <a href="https://vsp.vn/nguon-may-tinh.html" class="category-link">Nguồn PC</a>
+                <a href="https://vsp.vn/bo-nho-ram-may-tinh.html" class="category-link">Ram</a>
+                <a href="https://vsp.vn/ssd-vsptech.html" class="category-link">SSD</a>
+            </div>
+
+            <div class="flex justify-between items-end border-b border-gray-100 pb-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Tra Cứu Bảo Hành</h1>
+                    <p class="text-xs text-gray-500 mt-1">Hệ thống kiểm tra sản phẩm chính hãng</p>
+                </div>
+                <!-- Nút Login nhỏ gọn, tinh tế -->
+                <button id="login-nav-btn" class="text-xs font-semibold text-primary-600 bg-primary-50 px-3 py-1.5 rounded-full hover:bg-primary-100 transition">
+                    Admin
+                </button>
+                <button id="logout-nav-btn" class="hidden text-xs font-semibold text-red-600 bg-red-50 px-3 py-1.5 rounded-full hover:bg-red-100 transition">
+                    Thoát
+                </button>
+            </div>
+            
+            <!-- ĐÃ XÓA: Nút xem lịch sử -->
+        </div>
+
+        <div class="p-6 md:p-8">
+            <!-- Loading -->
+            <div id="loading-indicator" class="hidden flex-col items-center justify-center py-8">
+                <div class="spinner border-t-blue-600 w-10 h-10 mb-3"></div>
+                <p class="text-gray-500 text-sm font-medium">Đang xử lý dữ liệu...</p>
+            </div>
+
+            <!-- Message Box -->
+            <div id="message-box" class="hidden p-4 rounded-xl mb-6 text-sm font-medium border"></div>
+
+            <!-- #1. View Đăng nhập -->
+            <div id="login-view" class="view">
+                <div class="text-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-900">Đăng Nhập Quản Trị</h2>
+                    <p class="text-sm text-gray-500">Dành cho nhân viên kích hoạt</p>
+                </div>
+                <form id="login-form" class="space-y-4">
+                    <div>
+                        <input type="text" id="username" name="username" placeholder="Tên đăng nhập" required class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition">
+                    </div>
+                    <div>
+                        <input type="password" id="password" name="password" placeholder="Mật khẩu" required class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition">
+                    </div>
+                    <div class="pt-2">
+                        <button type="submit" class="btn-primary w-full text-white py-3 rounded-xl font-bold shadow-lg">
+                            Đăng Nhập
+                        </button>
+                        <button type="button" id="cancel-login-btn" class="w-full mt-3 text-gray-500 text-sm hover:text-gray-800 py-2">
+                            Quay lại trang tra cứu
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- #2. View Tra Cứu (Public) -->
+            <div id="public-check-view" class="view active">
+                <div class="text-center mb-8">
+                    <h2 class="text-lg font-semibold text-gray-800">Nhập thông tin sản phẩm</h2>
+                </div>
+                <form id="public-check-form" class="space-y-5">
+                    <div class="relative group">
+                        <input type="text" id="public-serial" name="serial" placeholder="Nhập số Seri hoặc quét mã" required 
+                            class="w-full pl-5 pr-14 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-lg font-medium text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition shadow-sm group-hover:shadow-md">
+                        
+                        <button type="button" id="scan-public-serial" class="absolute inset-y-0 right-2 flex items-center justify-center w-12 text-gray-400 hover:text-primary-600 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path>
+                                <circle cx="12" cy="13" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                    <button type="submit" class="btn-primary w-full text-white py-4 rounded-2xl font-bold text-lg shadow-lg tracking-wide">
+                        KIỂM TRA BẢO HÀNH
+                    </button>
+                </form>
+            </div>
+
+            <!-- #3. View Kích Hoạt (Admin) -->
+            <div id="admin-activate-view" class="view">
+                <div class="bg-blue-50 rounded-xl p-4 mb-6 border border-blue-100">
+                    <h2 class="text-blue-800 font-bold text-center">Kích Hoạt Sản Phẩm Mới</h2>
+                </div>
+                <form id="admin-activate-form" class="space-y-4">
+                    <div class="relative">
+                        <label class="text-xs font-bold text-gray-500 uppercase ml-1 mb-1 block">Số Seri</label>
+                        <input type="text" id="admin-serial" name="serial" placeholder="Quét hoặc nhập..." required 
+                            class="w-full pl-4 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500">
+                        <button type="button" id="scan-admin-serial" class="absolute bottom-2 right-2 w-10 h-10 flex items-center justify-center text-gray-500 hover:text-primary-600">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>
+                        </button>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase ml-1 mb-1 block">Số Điện Thoại Khách</label>
+                        <input type="tel" id="customer-phone" name="phone" placeholder="Nhập SĐT khách hàng" required 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500">
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white py-3.5 rounded-xl font-bold shadow-md transition mt-4">
+                        KÍCH HOẠT NGAY
+                    </button>
+                </form>
+            </div>
+
+            <!-- #4. View Kết Quả (Được làm đẹp nhất) -->
+            <div id="result-view" class="view">
+                <div class="text-center mb-6">
+                    <div id="result-icon" class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 text-green-600 mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                    <h2 id="result-title" class="text-xl font-bold text-gray-900">Kết Quả Tra Cứu</h2>
+                </div>
+
+                <!-- Thẻ thông tin chi tiết -->
+                <div class="bg-gray-50 rounded-2xl p-5 border border-gray-200 shadow-inner">
+                    <div id="result-content" class="space-y-1">
+                        <!-- Nội dung sẽ được chèn vào đây bởi JS -->
+                    </div>
+                </div>
+                
+                <div id="result-warning" class="hidden mt-4 p-4 rounded-xl text-sm flex items-start">
+                    <svg id="warning-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 mt-0.5 flex-shrink-0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    <span id="warning-text"></span>
+                </div>
+
+                <button type="button" id="back-btn" class="w-full mt-6 py-3 text-primary-600 font-semibold hover:bg-primary-50 rounded-xl transition">
+                    Quay lại
+                </button>
+            </div>
+            
+            <!-- ĐÃ XÓA: View Lịch sử kích hoạt -->
+        </div>
+    </div>
+
+    <!-- Modal Camera -->
+    <div id="scanner-modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+            <h3 class="text-lg font-bold text-center mb-4 text-gray-800">Quét Mã Vạch</h3>
+            <div id="qr-reader" class="w-full rounded-xl overflow-hidden bg-black" style="min-height: 250px;"></div>
+            <button type="button" id="close-scanner-btn" class="w-full mt-4 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition">
+                Đóng Camera
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // CẤU HÌNH: DÁN LINK APPS SCRIPT VÀO ĐÂY
+        // ==========================================
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwA_e5DXrvgFcn4ZeGqRBee-D7WG6XdCvEuFtONdN1JjHO2oUJcGVq6lk2jgVHXDFhr/exec'; 
+        // ==========================================
+
+        // --- BIẾN TOÀN CỤC ---
+        let currentAdminUser = null;
+        let currentView = 'public-check-view';
+
+        // --- LẤY DOM ELEMENTS ---
+        let views, loginNavBtn, logoutNavBtn, cancelLoginBtn, backBtn, loadingIndicator, messageBox, loginForm, publicCheckForm, adminActivateForm, publicScanBtn, adminScanBtn, resultView, resultIcon, resultTitle, resultContent, resultWarning, warningText, scannerModal, closeScannerBtn, html5QrCode, activeScanInputId;
+
+        function getDOMElements() {
+            try {
+                views = document.querySelectorAll('.view');
+                loginNavBtn = document.getElementById('login-nav-btn');
+                logoutNavBtn = document.getElementById('logout-nav-btn');
+                
+                cancelLoginBtn = document.getElementById('cancel-login-btn');
+                backBtn = document.getElementById('back-btn');
+                
+                loadingIndicator = document.getElementById('loading-indicator');
+                messageBox = document.getElementById('message-box');
+                
+                loginForm = document.getElementById('login-form');
+                publicCheckForm = document.getElementById('public-check-form');
+                adminActivateForm = document.getElementById('admin-activate-form'); 
+
+                publicScanBtn = document.getElementById('scan-public-serial');
+                adminScanBtn = document.getElementById('scan-admin-serial');
+
+                resultView = document.getElementById('result-view');
+                resultIcon = document.getElementById('result-icon');
+                resultTitle = document.getElementById('result-title');
+                resultContent = document.getElementById('result-content');
+                resultWarning = document.getElementById('result-warning');
+                warningText = document.getElementById('warning-text');
+
+                scannerModal = document.getElementById('scanner-modal');
+                closeScannerBtn = document.getElementById('close-scanner-btn');
+                html5QrCode = null;
+                activeScanInputId = null;
+
+                return true; // Thành công
+            } catch (e) {
+                console.error("LỖI NGHIÊM TRỌNG KHI LẤY DOM:", e);
+                alert("Lỗi tải trang. Không thể tìm thấy element. " + e.message);
+                return false; // Thất bại
+            }
+        }
+
+
+        // --- HÀM TIỆN ÍCH ---
+
+        function showView(viewId) {
+            views.forEach(view => {
+                if (view.id === viewId) {
+                    view.classList.remove('hidden');
+                    view.classList.add('active');
+                } else {
+                    view.classList.add('hidden');
+                    view.classList.remove('active');
+                }
+            });
+            currentView = viewId;
+            hideMessage(); 
+        }
+
+        function showMessage(message, type = 'error') {
+            messageBox.textContent = message;
+            messageBox.className = 'p-4 rounded-xl mb-6 text-sm font-medium border flex items-center'; 
+            if (type === 'error') {
+                messageBox.classList.add('bg-red-50', 'text-red-600', 'border-red-100');
+            } else {
+                messageBox.classList.add('bg-green-50', 'text-green-600', 'border-green-100');
+            }
+            messageBox.classList.remove('hidden');
+        }
+
+        function hideMessage() {
+            messageBox.classList.add('hidden');
+        }
+
+        function setLoading(show) {
+            if (show) {
+                loadingIndicator.classList.remove('hidden');
+                loadingIndicator.classList.add('flex');
+                document.getElementById(currentView)?.classList.add('hidden');
+                hideMessage();
+            } else {
+                loadingIndicator.classList.add('hidden');
+                loadingIndicator.classList.remove('flex');
+                document.getElementById(currentView)?.classList.remove('hidden');
+            }
+        }
+
+        function formatDate(dateInput) {
+            if (!dateInput) return 'N/A';
+            const date = new Date(dateInput);
+            if (isNaN(date.getTime())) return 'N/A';
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        function createInfoRow(label, value, isHighlight = false) {
+            return `
+                <div class="info-row">
+                    <span class="info-label">${label}</span>
+                    <span class="info-value ${isHighlight ? 'text-primary-700 text-lg' : ''}">${value || '---'}</span>
+                </div>
+            `;
+        }
+        
+        async function callGoogleScript(payload) {
+            if (GOOGLE_SCRIPT_URL === 'PASTE_YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE') {
+                showMessage('Lỗi cấu hình: Vui lòng dán URL Google Apps Script vào code (dòng 345).');
+                return null;
+            }
+            
+            setLoading(true);
+            try {
+                // Thêm username vào payload nếu đã đăng nhập
+                if (currentAdminUser) {
+                    payload.adminUser = currentAdminUser;
+                }
+                
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    cache: 'no-cache',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload),
+                    redirect: 'follow'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Lỗi HTTP: ${response.status} ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                
+                setLoading(false);
+                if (result.status === 'error') {
+                    showMessage(result.message || 'Đã xảy ra lỗi không xác định.');
+                    showView(currentView); 
+                    return null;
+                }
+                
+                return result.data;
+            } catch (error) {
+                setLoading(false);
+                showMessage(`Không thể kết nối đến máy chủ: ${error.message}. Kiểm tra lại link URL và cài đặt CORS.`);
+                showView(currentView); 
+                return null;
+            }
+        }
+
+        // --- HÀM HIỂN THỊ LOGIC ---
+
+        function displayPublicCheckResult(data) {
+            resultTitle.textContent = 'Thông Tin Sản Phẩm';
+            resultIcon.className = 'inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 text-blue-600 mb-3';
+            resultIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13.5V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7.5M20 7L10 13l-8-5"></path><path d="M20 7v10"></path><path d="M7 13.5v7"></path><path d="M4 20.5h6"></path></svg>`;
+
+            const xuatKhoDate = new Date(data.xuatKho);
+            const luuKhoDate = new Date(xuatKhoDate);
+            luuKhoDate.setMonth(luuKhoDate.getMonth() + 6);
+            const baoHanhDuKienDate = new Date(xuatKhoDate);
+            baoHanhDuKienDate.setMonth(baoHanhDuKienDate.getMonth() + 30);
+
+            let html = '';
+            html += createInfoRow('Số Seri', data.serial);
+            html += createInfoRow('Ngày xuất kho', formatDate(xuatKhoDate));
+            html += createInfoRow('Hạn lưu kho', formatDate(luuKhoDate));
+            html += createInfoRow('BH dự kiến đến', formatDate(baoHanhDuKienDate), true);
+            
+            resultContent.innerHTML = html;
+
+            warningText.textContent = "Sản phẩm này chưa được kích hoạt bảo hành điện tử.";
+            resultWarning.className = "mt-4 p-4 bg-gray-100 border border-gray-200 text-gray-600 rounded-xl text-sm flex items-start";
+            resultWarning.classList.remove('hidden');
+            
+            showView('result-view');
+        }
+
+        function displayActivatedResult(data, title = "Sản Phẩm Chính Hãng") {
+            resultTitle.textContent = title;
+            resultIcon.className = 'inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 text-green-600 mb-3';
+            resultIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+
+            let html = '';
+            html += createInfoRow('Số Seri', data.serial);
+            html += createInfoRow('SĐT Khách hàng', data.sdtKhach);
+            html += createInfoRow('Ngày xuất kho', formatDate(data.xuatKho));
+            html += createInfoRow('Ngày kích hoạt', formatDate(data.kichHoat));
+            // HIỂN THỊ LẠI THEO YÊU CẦU MỚI:
+            html += createInfoRow('Người kích hoạt', data.nguoiKichHoat); 
+
+            html += `
+                <div class="mt-4 pt-4 border-t border-dashed border-gray-300">
+                    <div class="flex justify-between items-end">
+                        <span class="text-sm font-bold text-gray-500 uppercase">Hết hạn bảo hành</span>
+                        <span class="text-xl font-bold text-blue-600">${formatDate(data.hetHan)}</span>
+                    </div>
+                </div>
+            `;
+            resultContent.innerHTML = html;
+
+            if (data.warning) {
+                warningText.textContent = data.warning;
+                resultWarning.className = "mt-4 p-4 bg-orange-50 border border-orange-100 text-orange-800 rounded-xl text-sm flex items-start";
+            } else {
+                warningText.textContent = "Sản phẩm đang trong thời gian bảo hành.";
+                resultWarning.className = "mt-4 p-4 bg-green-50 border border-green-100 text-green-700 rounded-xl text-sm flex items-start font-medium";
+            }
+            resultWarning.classList.remove('hidden');
+            showView('result-view');
+        }
+
+        // ĐÃ XÓA: Hàm displayHistory (nguyên nhân lỗi async)
+
+        // --- XỬ LÝ CAMERA ---
+        async function handleScan(inputId) {
+            if (typeof Html5Qrcode !== "function") {
+                showMessage('Lỗi: Thư viện quét mã vạch không tải được.', 'error');
+                return;
+            }
+            if (window.location.protocol !== "https:" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+                showMessage('Lỗi bảo mật: Camera chỉ chạy trên HTTPS.', 'error');
+                return;
+            }
+
+            activeScanInputId = inputId;
+            scannerModal.classList.remove('hidden');
+
+            try {
+                if (!html5QrCode) {
+                    html5QrCode = new Html5Qrcode("qr-reader"); 
+                }
+                try { 
+                    await Html5Qrcode.getCameras(); 
+                } catch (err) {
+                    showMessage('Vui lòng cấp quyền Camera trong cài đặt trình duyệt.', 'error');
+                    stopScanner();
+                    return;
+                }
+
+                const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+                
+                html5Qrcode.start(
+                    { facingMode: "environment" }, 
+                    config,
+                    (decodedText) => {
+                        const inputElement = document.getElementById(activeScanInputId);
+                        if (inputElement) inputElement.value = decodedText;
+                        stopScanner();
+                        if(activeScanInputId === 'public-serial') {
+                             publicCheckForm.requestSubmit();
+                        }
+                    },
+                    (errorMessage) => {}
+                ).catch((err) => {
+                    showMessage('Không thể mở camera. Hãy thử lại hoặc nhập tay.', 'error');
+                    stopScanner();
+                });
+            } catch (err) {
+                showMessage('Lỗi camera không xác định.', 'error');
+                stopScanner();
+            }
+        }
+
+        function stopScanner() {
+            try {
+                if (html5QrCode && html5QrCode.isScanning) {
+                    html5QrCode.stop().then(() => {
+                         scannerModal.classList.add('hidden');
+                         html5QrCode.clear();
+                    });
+                } else {
+                    scannerModal.classList.add('hidden');
+                }
+            } catch (e) { 
+                scannerModal.classList.add('hidden'); 
+            }
+        }
+
+        // --- GÁN SỰ KIỆN (EVENTS) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            if (!getDOMElements()) {
+                // Nếu lấy DOM lỗi, không chạy tiếp
+                return;
+            }
+            
+            try {
+                publicScanBtn.addEventListener('click', () => handleScan('public-serial'));
+                adminScanBtn.addEventListener('click', () => handleScan('admin-serial'));
+                closeScannerBtn.addEventListener('click', stopScanner);
+
+                loginNavBtn.addEventListener('click', () => showView('login-view'));
+                cancelLoginBtn.addEventListener('click', () => showView('public-check-view'));
+                
+                backBtn.addEventListener('click', () => {
+                    resultContent.innerHTML = '';
+                    resultWarning.classList.add('hidden');
+                    if (currentAdminUser) showView('admin-activate-view');
+                    else showView('public-check-view');
+                });
+
+                // ĐÃ XÓA: Gán sự kiện cho nút Lịch sử
+
+                logoutNavBtn.addEventListener('click', () => {
+                    currentAdminUser = null;
+                    loginNavBtn.classList.remove('hidden');
+                    logoutNavBtn.classList.add('hidden');
+                    // ĐÃ XÓA: Ẩn nút lịch sử
+                    showView('public-check-view');
+                    showMessage('Đã đăng xuất.', 'success');
+                });
+
+                loginForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const username = loginForm.username.value;
+                    const data = await callGoogleScript({
+                        action: 'login',
+                        username: username,
+                        password: loginForm.password.value
+                    });
+                    if (data) {
+                        currentAdminUser = data.user; // Lưu tên user
+                        loginNavBtn.classList.add('hidden');
+                        logoutNavBtn.classList.remove('hidden');
+                        // ĐÃ XÓA: Hiện nút lịch sử
+                        showView('admin-activate-view');
+                        loginForm.reset();
+                    } else { 
+                        loginForm.password.value = ''; 
+                    }
+                });
+
+                publicCheckForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const serial = publicCheckForm.serial.value.trim().toUpperCase();
+                    const data = await callGoogleScript({ action: 'check', serial: serial });
+                    if (data) {
+                        if (data.kichHoat) displayActivatedResult(data);
+                        else displayPublicCheckResult(data);
+                        publicCheckForm.reset();
+                    }
+                });
+
+                adminActivateForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const adminForm = document.getElementById('admin-activate-form');
+                    const data = await callGoogleScript({
+                        action: 'activate',
+                        serial: adminForm.serial.value.trim().toUpperCase(),
+                        phone: adminForm.phone.value.trim()
+                        // username đã tự động thêm vào callGoogleScript
+                    });
+                    if (data) {
+                        displayActivatedResult(data, "KÍCH HOẠT THÀNH CÔNG");
+                        adminForm.reset();
+                    }
+                });
+
+            } catch (e) {
+                console.error("LỖI NGHIÊM TRỌNG KHI GẮN SỰ KIỆN:", e);
+                alert("Lỗi nghiêm trọng khi khởi tạo trang. Hãy thử tải lại. " + e.message);
+            }
+        });
+    </script>
+</body>
+</html>
